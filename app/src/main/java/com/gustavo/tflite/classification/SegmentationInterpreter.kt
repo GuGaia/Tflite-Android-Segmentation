@@ -20,7 +20,6 @@ class SegmentationInterpreter(
     init {
         interpreter = Interpreter(loadModelFile(assetManager, modelPath),
             Interpreter.Options().apply {
-                // 2-4 threads costuma ser bom no telefone
                 numThreads = Runtime.getRuntime().availableProcessors().coerceAtMost(4)
             })
     }
@@ -47,7 +46,6 @@ class SegmentationInterpreter(
         return buf
     }
 
-    /** Roda o modelo e retorna um bitmap de máscara [inputSize x inputSize], ARGB com alpha vermelho. */
     fun predictMask(bitmap: Bitmap, threshold: Float = 0.5f): Bitmap {
         val input = makeInputBuffer(bitmap)
         val output = ByteBuffer.allocateDirect(4 * inputSize * inputSize).order(ByteOrder.nativeOrder())
@@ -58,8 +56,7 @@ class SegmentationInterpreter(
 
         for (y in 0 until inputSize) {
             for (x in 0 until inputSize) {
-                val z = output.getFloat()              // logit
-                // sigmoid estável
+                val z = output.getFloat()
                 val prob = if (z >= 0f) {
                     val e = kotlin.math.exp(-z)
                     1f / (1f + e)
@@ -68,13 +65,11 @@ class SegmentationInterpreter(
                     e / (1f + e)
                 }
                 val v = if (prob >= threshold) 255 else 0
-                mask.setPixel(x, y, Color.argb(160, v, 0, 0)) // overlay vermelho
+                mask.setPixel(x, y, Color.argb(160, v, 0, 0))
             }
         }
         return mask
     }
-
-    /** Retorna a imagem de entrada com a máscara sobreposta (redimensionada ao tamanho original). */
     fun overlayOn(bitmap: Bitmap, threshold: Float = 0.5f): Bitmap {
         val maskSmall = predictMask(bitmap, threshold)
         val mask = Bitmap.createScaledBitmap(maskSmall, bitmap.width, bitmap.height, true)

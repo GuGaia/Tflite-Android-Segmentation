@@ -17,7 +17,6 @@ class MainActivity : ComponentActivity() {
     private var selectedBitmap: Bitmap? = null
     private var selectedModel: String = "fp32"
     private var segmenter: SegmentationInterpreter? = null
-    // classes removed for segmentation
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
